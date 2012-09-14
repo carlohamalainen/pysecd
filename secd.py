@@ -83,7 +83,7 @@ OP_CODES = [ADD,      # integer addition
 OP_CODES = dict([(op, True) for op in OP_CODES])
 
 
-class SECDMemory:
+class SECD:
     def __init__(self):
         # Memory of the machine. A 'None' indicates an unused cell. Note that
         # 0 is never used because that corresponds to nil.
@@ -121,7 +121,7 @@ class SECDMemory:
         and the values of each. The register C (the program counter)
         always stores an integer.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> m.dump_registers()
         S: address = 2 value: []
         E: address = 3 value: []
@@ -151,7 +151,7 @@ class SECDMemory:
         cell, a tuple indicating the type (integer or nonterminal)
         and the contents.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> m.dump_memory()
         2 ('NT', 0, 0)
         3 ('NT', 0, 0)
@@ -177,7 +177,7 @@ class SECDMemory:
         """
         Return the address of an unused memory cell.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> m.get_new_address()
         5
         >>> m.get_new_address()
@@ -193,7 +193,7 @@ class SECDMemory:
         All memory cells have a tag, indicating if the cell stores
         an integers (TAG_INTEGER) or nonterminal (TAG_NONTERMINAL).
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
 
         >>> new_cell = m.get_new_address()
         >>> m.set_int(new_cell, 123)
@@ -212,7 +212,7 @@ class SECDMemory:
         """
         Push a cell onto the top of the given stack.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> m.get_value(m.registers['S'])
         []
 
@@ -237,7 +237,7 @@ class SECDMemory:
         """
         Pop the top element off the stack.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
 
         >>> new_cell = m.get_new_address()
         >>> m.set_int(new_cell, 123)
@@ -266,7 +266,7 @@ class SECDMemory:
         """
         Address register value of a nonterminal cell.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
 
         >>> new_cell = m.get_new_address()
         >>> m.set_int(new_cell, 123)
@@ -286,7 +286,7 @@ class SECDMemory:
         """
         Data register value of a nonterminal cell.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
 
         >>> new_cell = m.get_new_address()
         >>> m.set_int(new_cell, 123)
@@ -319,7 +319,7 @@ class SECDMemory:
         and allow a string to be stored in an integer cell as long
         as it refers to an opcode.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> new_cell = m.get_new_address()
         >>> m.set_int(new_cell, 123)
         >>> m.memory[new_cell]
@@ -334,7 +334,7 @@ class SECDMemory:
         """
         Get the integer value of a memory cell.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> new_cell = m.get_new_address()
         >>> m.set_int(new_cell, 123)
         >>> m.get_int(new_cell)
@@ -348,7 +348,7 @@ class SECDMemory:
         """
         Set a nonterminal node.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> new_cell = m.get_new_address()
         >>> m.set_nonterminal(new_cell, 100, 200)
         >>> m.memory[new_cell]
@@ -364,7 +364,7 @@ class SECDMemory:
         recursive definition so it will fail if x is too large (we
         will hit Python's recursion limit).
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> new_cell = m.get_new_address()
 
         >>> m.store_py_list(new_cell, [])
@@ -426,7 +426,7 @@ class SECDMemory:
         is printed). Also, the nil pointer created by DUM will be
         printed as 'NIL_PTR0', which is not handled by store_py_list().
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> new_cell = m.get_new_address()
 
         >>> m.set_int(new_cell, 33)
@@ -471,7 +471,7 @@ class SECDMemory:
         Produce a dotty (graphviz) graph representing the linked structure at
         'address'. See draw_graphs() for some examples and associated PNG plots.
 
-        >>> m = SECDMemory()
+        >>> m = SECD()
         >>> new_cell = m.get_new_address()
 
         >>> m.store_py_list(new_cell, [])
@@ -548,7 +548,7 @@ class SECDMemory:
         """
         Initialise the C register with 'code' and the stack S with 'stack'.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([ADD], [100, 42])
         >>> s.get_value(s.registers['C'])
         ['ADD']
@@ -567,7 +567,7 @@ class SECDMemory:
         """
         Integer addition; arguments are taken from the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([ADD], [100, 42])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -595,7 +595,7 @@ class SECDMemory:
         """
         Integer subtraction; arguments are taken from the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([SUB], [100, 42])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -623,7 +623,7 @@ class SECDMemory:
         """
         Integer multiplication; arguments are taken from the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([MUL], [100, 42])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -651,7 +651,7 @@ class SECDMemory:
         """
         Integer division; arguments are taken from the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([DIV], [18, 3])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -679,7 +679,7 @@ class SECDMemory:
         """
         Push an empty list (nil) onto the stack. See also CONS.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([NIL], [18, 19])
         >>> s.get_value(s.registers['S'])
         [18, 19]
@@ -705,7 +705,7 @@ class SECDMemory:
         is whatever follows LDC in C, so it may be an arbitrary 
         s-expression.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([LDC, 3], [18, 19])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -714,7 +714,7 @@ class SECDMemory:
         C: address = 9 value: 9
         D: address = 4 value: []
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([LDC, [3, 4, [18]]], [1])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -739,7 +739,7 @@ class SECDMemory:
         function - this happens when an appropriate AP opcode is
         executed.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([LDC, [3, 4], LDF, [LD, [1, 2], LD, [1, 1], ADD, RTN], AP, WRITEI, STOP,], [500])
         >>> s.store_py_list(s.registers['E'], [[99, 999]]) # pretend that this is the enclosing environment
         >>> s.dump_registers()
@@ -797,7 +797,7 @@ class SECDMemory:
 
         >>> mul_5_9 = [LDC, [5, 9], LDF, [LD, [1, 2], LD, [1, 1], MUL, RTN], AP]
         >>> add_3_4 = [LDC, [3, 4], LDF, [LD, [1, 2], LD, [1, 1], ADD] + mul_5_9 + [ADD, RTN], AP, WRITEI, STOP]
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program(add_3_4, [500])
         >>> s.store_py_list(s.registers['E'], [[99, 999]]) # pretend that this is the enclosing environment
 
@@ -911,7 +911,7 @@ class SECDMemory:
         dump. Typically used in conjunction with SEL. For a longer
         example see opcode_SEL().
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([JOIN], [])
         >>> new_cell = s.get_new_address()
         >>> s.set_int(new_cell, 100)
@@ -948,7 +948,7 @@ class SECDMemory:
         recover the original S, E, and C registers from the dump,
         and leave the function's result on the top of S.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([LDC, [3, 4], LDF, [LD, [1, 2], LD, [1, 1], ADD, RTN], AP, WRITEI, STOP,], [500])
         >>> for _ in range(8): s.execute_opcode()
         7
@@ -964,7 +964,7 @@ class SECDMemory:
         [9, 8, 7] onto the stack, and only the list [9, 8, 7] is
         preserved after the RTN:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([LDC, [3, 4], LDF, [LD, [1, 2], LD, [1, 1], ADD, LDC, [9, 8, 7], RTN], AP, STOP,], [500])
         >>> for _ in range(9): s.execute_opcode()
         <BLANKLINE>
@@ -1028,7 +1028,7 @@ class SECDMemory:
         In this example with a 1 on the top of the stack, we follow 
         the WRITEI path and print an integer 97, then jump to the last WRITEI:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([SEL, [WRITEI, JOIN], [WRITEC, JOIN], WRITEI], [1, 97, 1000])
         >>> s.execute_opcode()
         >>> s.execute_opcode()
@@ -1040,7 +1040,7 @@ class SECDMemory:
         With a 0 on the top of the stack, we follow the WRITEC path and print an
         'a', then jump to the last WRITEI:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([SEL, [WRITEI, JOIN], [WRITEC, JOIN], WRITEI], [0, 97, 1000])
         >>> s.execute_opcode()
         >>> s.execute_opcode()
@@ -1073,7 +1073,7 @@ class SECDMemory:
         Test if the list on the stack is empty. We do not pop the
         list off the stack and the result is pushed onto the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([NULL], [[], 999])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -1083,7 +1083,7 @@ class SECDMemory:
         D: address = 4 value: []
 
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([NULL], [[1, 2, 3], 999])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -1108,7 +1108,7 @@ class SECDMemory:
         """
         Write an integer to the console. Takes its argument from the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([WRITEI], [1234])
         >>> s.execute_opcode()
         1234
@@ -1126,7 +1126,7 @@ class SECDMemory:
         Write a character to the console. Takes its argument (an integer)
         from the stack and prints chr() of the value.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([WRITEC], [97])
         >>> s.execute_opcode()
         a
@@ -1155,7 +1155,7 @@ class SECDMemory:
         """
         Take the car of the list on the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([CAR], [[1, 2, 3]])
         >>> s.dump_registers()
         S: address = 2 value: [[1, 2, 3]]
@@ -1170,7 +1170,7 @@ class SECDMemory:
         C: address = 7 value: 7
         D: address = 4 value: []
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([CDR, CAR], [[1, 2, 3]])
         >>> s.execute_opcode()
         >>> s.execute_opcode()
@@ -1180,7 +1180,7 @@ class SECDMemory:
         C: address = 9 value: 9
         D: address = 4 value: []
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([CDR, CDR, CAR], [[1, 2, 3]])
         >>> s.execute_opcode()
         >>> s.execute_opcode()
@@ -1205,7 +1205,7 @@ class SECDMemory:
         """
         Take the cdr of the list on the stack.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([CDR, CDR, CDR], [[1, 2, 3]])
         >>> s.dump_registers()
         S: address = 2 value: [[1, 2, 3]]
@@ -1251,7 +1251,7 @@ class SECDMemory:
         Cons of the first element of the stack with the list in the
         second element.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([NIL, LDC, 3, CONS, LDC, 2, CONS, LDC, 1, CONS,], [999])
         >>> s.dump_registers()
         S: address = 2 value: [999]
@@ -1301,7 +1301,7 @@ class SECDMemory:
 
         Another example:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([NIL, LDC, [1, 2, 3, 4], CONS, LDC, 9, CONS], [999])
         >>> s.execute_opcode()
         >>> s.execute_opcode()
@@ -1343,7 +1343,7 @@ class SECDMemory:
         ij    = dotted pair, e.g. 1.3 = [1, 3]
         vlist = memory location of environment list
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> vlist = s.get_new_address()
         >>> s.store_py_list(vlist, [[8,], [4, [2, 2]], [1, 2, 3],])
 
@@ -1399,7 +1399,7 @@ class SECDMemory:
         the i-th sublist of the environment E. For further examples
         see opcode_LDF().
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.store_py_list(s.registers['E'], [[8,], [4, [2, 2]], [1, 2, 3],])
         >>> s.load_program([LD, [1, 1], LD, [2, 1], LD, [2, 2], LD, [3, 1], LD, [3, 2], LD, [3, 3],], [])
         >>> s.dump_registers()
@@ -1451,7 +1451,7 @@ class SECDMemory:
         with car = nil. Later the car of the new cell will be 
         reset by RAP to point to the list of closures.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([DUM], [])
         >>> s.execute_opcode()
         >>> s.dump_registers()
@@ -1460,7 +1460,7 @@ class SECDMemory:
         C: address = 7 value: 7
         D: address = 4 value: []
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> s.load_program([DUM], [])
         >>> s.store_py_list(s.registers['E'], [[99, 999]])
         >>> s.execute_opcode()
@@ -1509,7 +1509,7 @@ class SECDMemory:
                 LD fetches the closure for the function from the
                 environment, and AP unpacks it as before.
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> len_program = [DUM,
         ...                NIL,
         ...                LDF, [LD, [1, 1], NULL, SEL,
@@ -1538,7 +1538,7 @@ class SECDMemory:
         The same example as before, but with the accumulator set to
         100 so the final answer is 103:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> len_program = [DUM,
         ...                NIL,
         ...                LDF, [LD, [1, 1], NULL, SEL,
@@ -1569,7 +1569,7 @@ class SECDMemory:
 
         Call f2 and ignore f1:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> len_program = [DUM,
         ...               NIL,
         ...    
@@ -1606,7 +1606,7 @@ class SECDMemory:
 
         Call f1 and ignore f2:
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> len_program = [DUM,
         ...               NIL,
         ...    
@@ -1644,7 +1644,7 @@ class SECDMemory:
         Finally, here we intertwine f1 and f2, to check that the
         recursively defined functions can call each other. 
 
-        >>> s = SECDMemory()
+        >>> s = SECD()
         >>> len_program = [DUM,
         ...               NIL,
         ...    
@@ -1797,7 +1797,7 @@ def draw_sample_graphs():
     various lists.
     """
 
-    m = SECDMemory()
+    m = SECD()
     new_cell = m.get_new_address()
 
     m.store_py_list(new_cell, [])
