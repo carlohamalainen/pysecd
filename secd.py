@@ -1818,4 +1818,7 @@ def draw_sample_graphs():
     m.store_py_list(new_cell, [[], [[], []], [[[[ [], [], [[]] ]]]]])
     m.graph_at_address(new_cell).write_png('list_len_3_deeply_nested_empty_lists.png')
 
+    s = SECD()
+    s.load_program([LDC, [3, 4], LDF, [LD, [1, 2], LD, [1, 1], ADD, RTN], AP, WRITEI, STOP,], [500])
+    s.graph_at_address(new_cell).write_png('program_in_memory.png')
 
