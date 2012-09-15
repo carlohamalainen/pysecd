@@ -5,6 +5,18 @@ Python interpreter for the SECD abstract machine defined by Peter Landin.
 
 I followed the presentation of the SECD machine given by Peter M. Kogge in his book *The Architecture of Symbolic Computers* (1991, McGraw Hill). I wrote this interpreter as a learning exercise, so the code should not be taken as a definitive statement on how the SECD machine operates. The trickiest opcodes to implement were DUM and RAP, for defining recursive closures.
 
+To aid debugging I wrote a small wrapper for pydot, so that the memory structures can be visualised. For example the list [1, 2, 3] is stored as:
+
+![small list](https://github.com/carlohamalainen/pysecd/raw/master/list_1_2_3.png)
+
+A nonterminal cell has three parts: its address, the car value, and the cdr value. Nonterminal cells have two parts: the address and the integer value.
+
+![sample program](https://github.com/carlohamalainen/pysecd/raw/master/program_in_memory.png)
+
+On Debian-like systems, install pydot with this command:
+
+    sudo apt-get install python-pydot
+
 Further reading
 ======
 
