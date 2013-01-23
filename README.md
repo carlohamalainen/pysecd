@@ -9,7 +9,11 @@ To aid debugging I wrote a small wrapper for pydot, so that the memory structure
 
 ![small list](https://github.com/carlohamalainen/pysecd/raw/master/list_1_2_3.png)
 
-A nonterminal cell has three parts: its address, the car value, and the cdr value. Nonterminal cells have two parts: the address and the integer value.
+A nonterminal cell has three parts: its address, the car value, and the cdr value. Nonterminal cells have two parts: the address and the integer value. For convenience opcodes (ADD, LD, LDF, etc) are stored as strings so that when we draw the graph we can see opcodes instead of integers. For examle the program
+
+    [LDC, [3, 4], LDF, [LD, [1, 2], LD, [1, 1], ADD, RTN], AP, WRITEI, STOP,]
+
+corresponds to the following graph in memory:
 
 ![sample program](https://github.com/carlohamalainen/pysecd/raw/master/program_in_memory.png)
 
