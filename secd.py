@@ -112,7 +112,7 @@ class SECD:
         # The dump stack:
         self.registers['D'] = self.get_new_address()
         self.set_nonterminal(self.registers['D'], 0, 0)
-        
+
         assert self.max_used_address < MAX_ADDRESS
 
     def dump_registers(self):
@@ -142,7 +142,7 @@ class SECD:
         print 'E: address =', self.registers['E'], 'value:', self.get_value(self.registers['E'])
         print 'C: address =', self.registers['C'], 'value:', self.registers['C']
         print 'D: address =', self.registers['D'], 'value:', self.get_value(self.registers['D'])
-        
+
     def dump_memory(self):
         """
         Dump to stdout each cell of the machine's memory, ignoring
@@ -342,7 +342,7 @@ class SECD:
         """
 
         assert self.memory[address][0] == TAG_INTEGER
-        return self.memory[address][1] 
+        return self.memory[address][1]
 
     def set_nonterminal(self, address, car_value, cdr_value):
         """
@@ -356,7 +356,7 @@ class SECD:
         """
 
         self.memory[address] = (TAG_NONTERMINAL, car_value, cdr_value)
-        
+
     def store_py_list(self, address, x):
         """
         Given the Python list x, store it in the machine's memory
@@ -399,7 +399,7 @@ class SECD:
             car_address = self.get_new_address()
             cdr_address = self.get_new_address()
 
-            self.set_int(car_address, x[0]) 
+            self.set_int(car_address, x[0])
             self.store_py_list(cdr_address, x[1:])
 
             self.set_nonterminal(address, car_address, cdr_address)
@@ -562,7 +562,7 @@ class SECD:
 
         self.store_py_list(self.registers['S'], stack)
         self.running = True
-    
+
     def opcode_ADD(self):
         """
         Integer addition; arguments are taken from the stack.
@@ -702,7 +702,7 @@ class SECD:
     def opcode_LDC(self):
         """
         Load a constant onto the stack. The constant expression
-        is whatever follows LDC in C, so it may be an arbitrary 
+        is whatever follows LDC in C, so it may be an arbitrary
         s-expression.
 
         >>> s = SECD()
@@ -998,7 +998,7 @@ class SECD:
             print 'opcode_RTN: old_S:', self.get_value(old_S)
 
         # The result of the previous AP will be on the top of the current stack,
-        # so we cons this onto the front of the old stack. We take JUST ONE 
+        # so we cons this onto the front of the old stack. We take JUST ONE
         # element off the top of the stack.
         new_S = self.get_new_address()
         self.set_nonterminal(new_S, self.car(self.registers['S']), old_S)
@@ -1025,7 +1025,7 @@ class SECD:
         (an integer). We follow Python's convention for truthiness, so
         zero is false and anything else is true.
 
-        In this example with a 1 on the top of the stack, we follow 
+        In this example with a 1 on the top of the stack, we follow
         the WRITEI path and print an integer 97, then jump to the last WRITEI:
 
         >>> s = SECD()
@@ -1061,7 +1061,7 @@ class SECD:
 
         # Push this address onto the dump:
         self.push_stack('D', after_sel_address)
-       
+
         # Follow the if or the else branch:
         if value:
             self.registers['C'] = self.car(self.cdr(self.registers['C']))
@@ -1141,7 +1141,7 @@ class SECD:
 
     def opcode_STOP(self):
         """
-        Half the machine. Any future call to execute_opcode() results 
+        Half the machine. Any future call to execute_opcode() results
         in an error.
         """
 
@@ -1200,7 +1200,7 @@ class SECD:
         self.push_stack('S', car_value)
 
         self.registers['C'] = self.cdr(self.registers['C'])
-        
+
     def opcode_CDR(self):
         """
         Take the cdr of the list on the stack.
@@ -1448,7 +1448,7 @@ class SECD:
         Refer to K1991 p. 160.
 
         Cons onto the front of the environment register a cell
-        with car = nil. Later the car of the new cell will be 
+        with car = nil. Later the car of the new cell will be
         reset by RAP to point to the list of closures.
 
         >>> s = SECD()
@@ -1483,7 +1483,7 @@ class SECD:
     def opcode_RAP(self):
         """
         Apply a function that was set up in conjunction with DUM
-        and LDF. 
+        and LDF.
 
         The example below is taken from K1991 p. 164 and corresponds
         to the code:
@@ -1572,7 +1572,7 @@ class SECD:
         >>> s = SECD()
         >>> len_program = [DUM,
         ...               NIL,
-        ...    
+        ...
         ...               # f2: length of list
         ...               LDF, [LD, [1, 1], NULL, SEL,
         ...                                             [LD, [1, 2], JOIN,],
@@ -1587,7 +1587,7 @@ class SECD:
         ...                                             RTN,],
         ...               CONS,
         ...               LDF, [NIL, LDC, 0, CONS, LDC, [1, 2, 3], CONS, LD, [1, 2], AP, RTN,], # LD [1, 2] refers to f2
-        ...               RAP,                                              
+        ...               RAP,
         ...               STOP,]
         >>> s.load_program(len_program, [500])
         >>> s.store_py_list(s.registers['E'], [[99, 999]]) # pretend that this is the enclosing environment
@@ -1609,7 +1609,7 @@ class SECD:
         >>> s = SECD()
         >>> len_program = [DUM,
         ...               NIL,
-        ...    
+        ...
         ...               # f2: length of list
         ...               LDF, [LD, [1, 1], NULL, SEL,
         ...                                             [LD, [1, 2], JOIN,],
@@ -1642,12 +1642,12 @@ class SECD:
         D: address = 4 value: []
 
         Finally, here we intertwine f1 and f2, to check that the
-        recursively defined functions can call each other. 
+        recursively defined functions can call each other.
 
         >>> s = SECD()
         >>> len_program = [DUM,
         ...               NIL,
-        ...    
+        ...
         ...               # f2: length of list
         ...               LDF, [LD, [1, 1], NULL, SEL,
         ...                                             [LD, [1, 2], JOIN,],
@@ -1662,7 +1662,7 @@ class SECD:
         ...                                             RTN,],
         ...               CONS,
         ...               LDF, [NIL, LDC, 0, CONS, LDC, [1, 2, 3], CONS, LD, [1, 1], AP, RTN,], # LD [1, 1] refers to f1
-        ...               RAP,                                              
+        ...               RAP,
         ...               STOP,]
         >>> s.load_program(len_program, [500])
         >>> s.store_py_list(s.registers['E'], [[99, 999]]) # pretend that this is the enclosing environment
@@ -1711,7 +1711,7 @@ class SECD:
         # The environment E contains variable values specified by earlier
         # code; after the function executes we want this to be restored to its
         # original value. Unlike the case for AP, the first cell of E will currently
-        # contain a nil pointer (created by DUM), so the stuff that we actually want 
+        # contain a nil pointer (created by DUM), so the stuff that we actually want
         # to save is in the cdr of E.
         if self.debug: print 'opcode_RAP: saving cdr of E: ', self.get_value(self.cdr(self.registers['E']))
         assert self.memory[self.registers['E']][0] == TAG_NONTERMINAL
@@ -1788,9 +1788,9 @@ class SECD:
 
               STOP:   self.opcode_STOP,
              }[op_code]
-       
-        op() 
-        
+
+        op()
+
 def draw_sample_graphs():
     """
     Draw some sample graphs of the memory structure corresponding to

@@ -165,7 +165,7 @@ def compile_lambda(body, n, c):
 
 def compile(e, n, c):
     """
-    Compile an expression 'e', given a namelist 'n', and an 
+    Compile an expression 'e', given a namelist 'n', and an
     accumulating parameter 'c'.
 
     This function is an almost direct copy of Figure 7-21 of K1991.
