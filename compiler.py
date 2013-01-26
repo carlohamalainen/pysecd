@@ -59,7 +59,7 @@ def is_builtin(e):
     functions in the language.
     """
 
-    return e in [ADD, SUB, MUL, DIV, WRITEI, WRITEC, CAR, CDR] # FIXME Any other builtins?
+    return e in [ADD, SUB, MUL, DIV, WRITEI, WRITEC, CAR, CDR, NULL] # FIXME Any other builtins?
 
 def compile_builtin(args, n, c):
     """
@@ -166,7 +166,7 @@ def index(e, n):
         if j == []:
             return indx(e, n[1:], i + 1) # typo 2nd last line in Figure 7-22: refers to index instead of indx
         else:
-            return [i, j] # FIXME typo in K1991? Should be [j, i]? Originally had this: [i, j]
+            return [i, j]
 
     rval = indx(e, n, 1)
 
@@ -246,7 +246,24 @@ def compile(e, n, c):
     >>> for _ in range(15): s.execute_opcode()
     1
 
-    FIXME doctest letrec
+    Example on p. 164 of LETREC:
+
+    (LETREC (f) ((LAMBDA (x m)
+        (IF (null x) m (f (CDR x) (+ m 1))))) (f (1 2 3) 0))
+                                            ^
+                                            ^--- typo in text: missing closing paren
+
+    >>> code = compile([LETREC, ['f'], [[LAMBDA, ['x', 'm'], [IF, [NULL, 'x'], 'm', ['f', [CDR, 'x'], [ADD, 'm', 1]]]]], ['f', [LIST, 1, 2, 3], 0]], [], [WRITEI, STOP])
+    >>> print code
+    ['DUM', 'NIL', 'LDF', ['LD', [1, 1], 'NULL', 'SEL', ['LD', [1, 2], 'JOIN'], ['NIL', 'LDC', 1, 'LD', [1, 2], 'ADD', 'CONS', 'LD', [1, 1], 'CDR', 'CONS', 'LD', [2, 1], 'AP', 'JOIN'], 'RTN'], 'CONS', 'LDF', ['NIL', 'LDC', 0, 'CONS', 'NIL', 'LDC', 3, 'CONS', 'LDC', 2, 'CONS', 'LDC', 1, 'CONS', 'CONS', 'LD', [1, 1], 'AP', 'RTN'], 'RAP', 'WRITEI', 'STOP']
+
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    3
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
 
     FIXME doctest 'fcn must be a variable'
 
@@ -260,26 +277,25 @@ def compile(e, n, c):
 
     global logger
 
-    logger.debug('compile: e: %s; n: %s, c: %s', str(e), str(n), str(c))
-
     if is_atom(e):
-        logger.debug('compile: decided that <%s> is an atom', str(e))
         if e == NIL:
+            logger.debug('compile: decided that <%s> is an atom', str(e))
             return [NIL] + c
         else:
             ij = index(e, n)
             if ij == []:
+                logger.debug('compile: decided that <%s> is a constant' % (str(e),))
                 return [LDC] + [e] + c
             else:
+                logger.debug('compile: decided that <%s> is an identifier, index ij = <%s>' % (str(e), str(ij),))
                 return [LD]  + [ij]  + c
     else:
         fcn  = e[0]
         args = e[1:]
-        logger.debug('compile: othewise, <%s> is a function <%s> with args <%s>', str(e), str(fcn), str(args))
 
         if is_atom(fcn): # builtin, lambda, or special form
             if is_builtin(fcn):
-                logger.debug('compile: fcn is a built-in')
+                logger.debug('compile: fcn = <%s> is a built-in; args = <%s>' % (fcn, args,))
                 return compile_builtin(args, n, [fcn] + c)
             elif fcn == LIST:
                 # My own convenient built-in for making lists. Sample use:
@@ -290,8 +306,8 @@ def compile(e, n, c):
                 list_body = flatten1L([compile(list_item, n, [CONS]) for list_item in args][::-1])
                 return [NIL] + list_body + c
             elif fcn == LAMBDA:
-                logger.debug('compile: fcn is a LAMBDA')
-                assert len(args) == 2 # [name list, body]
+                logger.debug('compile LAMBDA: fcn is a LAMBDA, args[1] = <%s>; args[0] = <%s>' % (args[1], args[0],))
+                assert len(args) == 2 # i.e. args == [name list, body]
                 return compile_lambda(args[1], [args[0]] + n, c)
             elif fcn == IF:
                 logger.debug('compile: fcn is an IF')
@@ -305,11 +321,15 @@ def compile(e, n, c):
                     logger.debug('compile: fcn is LET')
                     return [NIL]      + compile_app(values, n,    compile_lambda(body, newn, [AP] + c)) # another typo in Figure 7-21: cons(AP, C) -> cons(AP, c)
                 elif fcn == LETREC:
-                    logger.debug('compile: fcn is LETREC')
+                    logger.debug('compile LETREC: fcn is LETREC')
+                    logger.debug('compile LETREC: values: ' + str(values))
+                    logger.debug('compile LETREC: newn:   ' + str(newn))
+                    logger.debug('compile LETREC: body:   ' + str(body))
+
                     return [DUM, NIL] + compile_app(values, newn, compile_lambda(body, newn, [RAP] + c))
             else: # fcn must be a variable FIXME is this comment correct?
-                logger.debug('compile: fcn is a variable? FIXME')
-                return [NIL] + compile_app(args, n, [LD] + index(fcn, n) + [AP] + c)
+                logger.debug('compile: fcn = <%s> is a variable?' % (fcn,))
+                return [NIL] + compile_app(args, n, [LD] + [index(fcn, n)] + [AP] + c)
 
         else: # an application with nested function
             return [NIL] + compile_app(args, n, compile(fcn, n, [AP] + c))
