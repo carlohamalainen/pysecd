@@ -1,6 +1,15 @@
 from secd import *
+import logging
 
-DEBUG = False
+global logger
+logger = logging.getLogger('pysecd_compiler')
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 
 # Keywords of our Lisp:
 IF      = 'IF'
@@ -9,6 +18,21 @@ NIL     = 'NIL'
 LAMBDA  = 'LAMBDA'
 LET     = 'LET'
 LETREC  = 'LETREC'
+LIST    = 'LIST'
+
+def flatten1L(x):
+    """
+    Utility function for flattening a list of lists.
+
+    >>> flatten1L([[1], [2, 3], [4]])
+    [1, 2, 3, 4]
+
+    Does not go more than one level deep:
+    >>> flatten1L([[1], [2, 3], [4, [5, 6]]])
+    [1, 2, 3, 4, [5, 6]]
+    """
+
+    return [inner for outer in x for inner in outer]
 
 def is_atom(e):
     """
@@ -108,7 +132,9 @@ def compile_if(test, then_code, else_code, n, c):
 
     """
 
-    if DEBUG: print 'compile_if:', test, then_code, else_code, n, c
+    global logger
+    logger.debug('compile_if: test: %s; then_code: %s; else_code: %s, n: %s, c: %s',
+                 str(test), str(then_code), str(else_code), str(n), str(c))
 
     return compile(test, n, [SEL] + [compile(then_code, n, [JOIN])]
                                   + [compile(else_code, n, [JOIN])]
@@ -200,6 +226,25 @@ def compile(e, n, c):
     C: address = 45 value: 45
     D: address = 4 value: []
 
+    >>> c = compile([LIST, 1, 2, 3], [], [STOP])
+    >>> print c
+    ['NIL', 'LDC', 3, 'CONS', 'LDC', 2, 'CONS', 'LDC', 1, 'CONS', 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(c)
+    >>> for _ in range(7): s.execute_opcode()
+    >>> s.dump_registers()
+    S: address = 29 value: [[1, 2, 3]]
+    E: address = 3 value: []
+    C: address = 25 value: 25
+    D: address = 4 value: []
+
+    >>> c = compile([LET, ['x'], [[LIST, 1, 2, 3]], [CAR, 'x']], [], [WRITEI, STOP])
+    >>> print c
+    ['NIL', 'NIL', 'LDC', 3, 'CONS', 'LDC', 2, 'CONS', 'LDC', 1, 'CONS', 'CONS', 'LDF', ['LD', [1, 1], 'CAR', 'RTN'], 'AP', 'WRITEI', 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(c)
+    >>> for _ in range(15): s.execute_opcode()
+    1
 
     FIXME doctest letrec
 
@@ -213,7 +258,12 @@ def compile(e, n, c):
 
     """
 
+    global logger
+
+    logger.debug('compile: e: %s; n: %s, c: %s', str(e), str(n), str(c))
+
     if is_atom(e):
+        logger.debug('compile: decided that <%s> is an atom', str(e))
         if e == NIL:
             return [NIL] + c
         else:
@@ -225,14 +275,26 @@ def compile(e, n, c):
     else:
         fcn  = e[0]
         args = e[1:]
+        logger.debug('compile: othewise, <%s> is a function <%s> with args <%s>', str(e), str(fcn), str(args))
 
         if is_atom(fcn): # builtin, lambda, or special form
             if is_builtin(fcn):
+                logger.debug('compile: fcn is a built-in')
                 return compile_builtin(args, n, [fcn] + c)
+            elif fcn == LIST:
+                # My own convenient built-in for making lists. Sample use:
+                # [LIST, 1, 2, 3] => [1, 2, 3].
+                #
+                # FIXME Not sure how this would behave on examples other than
+                # a simple list of ints, variable names, etc.
+                list_body = flatten1L([compile(list_item, n, [CONS]) for list_item in args][::-1])
+                return [NIL] + list_body + c
             elif fcn == LAMBDA:
+                logger.debug('compile: fcn is a LAMBDA')
                 assert len(args) == 2 # [name list, body]
                 return compile_lambda(args[1], [args[0]] + n, c)
             elif fcn == IF:
+                logger.debug('compile: fcn is an IF')
                 return compile_if(args[0], args[1], args[2], n, c)
             elif fcn == LET or fcn == LETREC:
                 newn   = [args[0]] + n
@@ -240,27 +302,17 @@ def compile(e, n, c):
                 body   = args[2]
 
                 if fcn == LET:
+                    logger.debug('compile: fcn is LET')
                     return [NIL]      + compile_app(values, n,    compile_lambda(body, newn, [AP] + c)) # another typo in Figure 7-21: cons(AP, C) -> cons(AP, c)
                 elif fcn == LETREC:
+                    logger.debug('compile: fcn is LETREC')
                     return [DUM, NIL] + compile_app(values, newn, compile_lambda(body, newn, [RAP] + c))
             else: # fcn must be a variable FIXME is this comment correct?
+                logger.debug('compile: fcn is a variable? FIXME')
                 return [NIL] + compile_app(args, n, [LD] + index(fcn, n) + [AP] + c)
 
         else: # an application with nested function
             return [NIL] + compile_app(args, n, compile(fcn, n, [AP] + c))
 
 if __name__ == '__main__':
-    if True:
-        DEBUG = True
-        c = compile([LET, ['x'], [[1,2,3]], [CAR, 'x']], [], [STOP])
-        print c
-        print
-        # c = [LDC, 1, SEL, [LDC, 97, WRITEI, JOIN], [LDC, 97, WRITEC, JOIN], STOP]
-
-        s = SECD()
-        s.load_program(c)
-
-        for i in range(6):
-            s.execute_opcode()
-            s.dump_registers()
-            print
+    print 'boo'
