@@ -19,6 +19,7 @@ LAMBDA  = 'LAMBDA'
 LET     = 'LET'
 LETREC  = 'LETREC'
 LIST    = 'LIST'
+AND2    = 'AND2'
 
 def flatten1L(x):
     """
@@ -59,7 +60,7 @@ def is_builtin(e):
     functions in the language.
     """
 
-    return e in [ADD, SUB, MUL, DIV, WRITEI, WRITEC, CAR, CDR, NULL] # FIXME Any other builtins?
+    return e in [ADD, SUB, MUL, DIV, WRITEI, WRITEC, CAR, CDR, NULL, ZEROP, GT0P, LT0P] # FIXME Any other builtins?
 
 def compile_builtin(args, n, c):
     """
@@ -139,7 +140,63 @@ def compile_if(test, then_code, else_code, n, c):
     return compile(test, n, [SEL] + [compile(then_code, n, [JOIN])]
                                   + [compile(else_code, n, [JOIN])]
                                   + c)
+def compile_and2(test1, test2, then_code, else_code, n, c):
+    """
+    FIXME
 
+    >>> code = compile([AND2, 0, 1, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
+    >>> print code
+    ['LDC', 0, 'LDC', 1, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    222
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
+
+    >>> code = compile([AND2, 1, 1, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
+    >>> print code
+    ['LDC', 1, 'LDC', 1, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    111
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
+
+    >>> code = compile([AND2, 1, 0, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
+    >>> print code
+    ['LDC', 1, 'LDC', 0, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    222
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
+
+    >>> code = compile([AND2, 0, 0, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
+    >>> print code
+    ['LDC', 0, 'LDC', 0, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    222
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
+    """
+
+    global logger
+    logger.debug('compile_and2: test1: %s; test2: %s; then_code: %s; else_code: %s, n: %s, c: %s',
+                 str(test1), str(test2), str(then_code), str(else_code), str(n), str(c))
+
+    return compile(test1, n, []) + compile(test2, n, []) +[MUL] + \
+           [SEL] + [compile(then_code, n, [JOIN])] \
+                 + [compile(else_code, n, [JOIN])] \
+                 + c
 
 def index(e, n):
     """
@@ -327,6 +384,9 @@ def compile(e, n, c):
             elif fcn == IF:
                 logger.debug('compile: fcn is an IF')
                 return compile_if(args[0], args[1], args[2], n, c)
+            elif fcn == 'AND2':
+                logger.debug('compile: fcn is an AND2')
+                return compile_and2(args[0], args[1], args[2], args[3], n, c)
             elif fcn == LET or fcn == LETREC:
                 newn   = [args[0]] + n
                 values = args[1]
@@ -352,10 +412,18 @@ def compile(e, n, c):
 if __name__ == '__main__':
     print 'boo'
 
-    # code = compile([LETREC, ['ackermann'], [[LAMBDA, ['m', 'n'], [IF [IF, [NULL, 'x'], 'm', ['f', [CDR, 'x'], [ADD, 'm', 1]]]]], ['f', [LIST, 1, 2, 3], 0]], [], [WRITEI, STOP])
-    # print code
+    # code = compile([LETREC, ['ackermann'], [[LAMBDA, ['m', 'n'], [IF [IF, [NULL, 'x'], 'm',                  ['f', [CDR, 'x'], [ADD, 'm', 1]]]]], ['f', [LIST, 1, 2, 3], 0]], [], [WRITEI, STOP])
+    # code = compile(  [LETREC, ['ackermann'], [[LAMBDA, ['m', 'n'], [IF, [ZEROP, 'm'], [ADD, 'n', 1], [-999]]], ['f', 0, 0]], [], [WRITEI, STOP])
+    #code = compile([LETREC, ['ackermann'], [[LAMBDA, ['m', 'n'],
+    #                                            [IF, [ZEROP, 'm'],
+    #                                              [ADD, 'n', 1],
+    #                                              200,]]],
+    #                   ['ackermann', 0, 0]], [], [WRITEI, STOP])
 
-    # s = SECD()
-    # s.load_program(code)
-    # while s.running: s.execute_opcode()
+    #print code
+
+    #s = SECD()
+    #s.load_program(code)
+    #while s.running: s.execute_opcode()
+
 
