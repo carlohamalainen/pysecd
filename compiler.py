@@ -265,6 +265,21 @@ def compile(e, n, c):
     MACHINE HALTED!
     <BLANKLINE>
 
+    Bind a few values in an outer LET expression.
+        mylist   = [1, 2, 3]
+        startval = 0
+        one      = 1
+
+    >>> code = compile([LET, ['mylist', 'startval', 'one'], [[LIST, 1, 2, 3], 0, 1],
+    ...                  [LETREC, ['f'], [[LAMBDA, ['x', 'm'], [IF, [NULL, 'x'], 'm', ['f', [CDR, 'x'], [ADD, 'm', 'one']]]]], ['f', 'mylist', 'startval']]], [], [WRITEI, STOP])
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    3
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
+
     FIXME doctest 'fcn must be a variable'
 
     >>> compile([LAMBDA, ['x', 'y'], [ADD, 'x', 'y']], [], [STOP])
@@ -336,3 +351,4 @@ def compile(e, n, c):
 
 if __name__ == '__main__':
     print 'boo'
+
