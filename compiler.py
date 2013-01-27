@@ -352,3 +352,10 @@ def compile(e, n, c):
 if __name__ == '__main__':
     print 'boo'
 
+    # code = compile([LETREC, ['ackermann'], [[LAMBDA, ['m', 'n'], [IF [IF, [NULL, 'x'], 'm', ['f', [CDR, 'x'], [ADD, 'm', 1]]]]], ['f', [LIST, 1, 2, 3], 0]], [], [WRITEI, STOP])
+    # print code
+
+    # s = SECD()
+    # s.load_program(code)
+    # while s.running: s.execute_opcode()
+

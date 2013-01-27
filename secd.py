@@ -51,6 +51,10 @@ SUB     = 'SUB'
 WRITEC  = 'WRITEC'
 WRITEI  = 'WRITEI'
 
+ZEROP   = 'ZEROP'
+GT0P    = 'GT0P'
+LT0P    = 'LT0P'
+
 OP_CODES = [ADD,      # integer addition
             MUL,      # integer multiplication
             SUB,      # integer subtraction
@@ -79,6 +83,11 @@ OP_CODES = [ADD,      # integer addition
             READC,    # read a single character from the terminal
 
             STOP,     # halt the machine
+
+            ZEROP,    # test if top of stack is zero (does not consume the element)                 [nonstandard opcode]
+            GT0P,     # test if top of stack is greater than zero (does not consume the element)    [nonstandard opcode]
+            LT0P,     # test if top of stack is less    than zero (does not consume the element)    [nonstandard opcode]
+
            ]
 OP_CODES = dict([(op, True) for op in OP_CODES])
 
@@ -1104,6 +1113,125 @@ class SECD:
 
         self.registers['C'] = self.cdr(self.registers['C'])
 
+    def opcode_ZEROP(self):
+        """
+        Test if the number on the stack is zero. We do not pop the
+        number off the stack, and the result is pushed onto the stack.
+
+        >>> s = SECD()
+        >>> s.load_program([ZEROP], [0, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [1, 0, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        >>> s = SECD()
+        >>> s.load_program([ZEROP], [2, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [0, 2, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        """
+
+        assert self.get_int(self.car(self.registers['C'])) == ZEROP
+
+        value = self.memory[self.car(self.registers['S'])]
+        assert value[0] == TAG_INTEGER
+
+        result = self.get_new_address()
+        self.set_int(result, int(value[1] == 0))
+        self.push_stack('S', result)
+
+        self.registers['C'] = self.cdr(self.registers['C'])
+
+    def opcode_GT0P(self):
+        """
+        Test if the number on the stack is greater than zero. We do
+        not pop the number off the stack, and the result is pushed
+        onto the stack.
+
+        >>> s = SECD()
+        >>> s.load_program([GT0P], [-5, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [0, -5, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        >>> s = SECD()
+        >>> s.load_program([GT0P], [0, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [0, 0, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        >>> s = SECD()
+        >>> s.load_program([GT0P], [2, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [1, 2, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        """
+
+        assert self.get_int(self.car(self.registers['C'])) == GT0P
+
+        value = self.memory[self.car(self.registers['S'])]
+        assert value[0] == TAG_INTEGER
+
+        result = self.get_new_address()
+        self.set_int(result, int(value[1] > 0))
+        self.push_stack('S', result)
+
+        self.registers['C'] = self.cdr(self.registers['C'])
+
+    def opcode_LT0P(self):
+        """
+        Test if the number on the stack is less than zero. We do not
+        pop the number off the stack, and the result is pushed onto
+        the stack.
+
+        >>> s = SECD()
+        >>> s.load_program([LT0P], [-3, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [1, -3, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        >>> s = SECD()
+        >>> s.load_program([LT0P], [2, 999])
+        >>> s.execute_opcode()
+        >>> s.dump_registers()
+        S: address = 13 value: [0, 2, 999]
+        E: address = 3 value: []
+        C: address = 7 value: 7
+        D: address = 4 value: []
+
+        """
+
+        assert self.get_int(self.car(self.registers['C'])) == LT0P
+
+        value = self.memory[self.car(self.registers['S'])]
+        assert value[0] == TAG_INTEGER
+
+        result = self.get_new_address()
+        self.set_int(result, int(value[1] < 0))
+        self.push_stack('S', result)
+
+        self.registers['C'] = self.cdr(self.registers['C'])
+
     def opcode_WRITEI(self):
         """
         Write an integer to the console. Takes its argument from the stack.
@@ -1787,6 +1915,11 @@ class SECD:
               READC:  None, # not implemented
 
               STOP:   self.opcode_STOP,
+
+              ZEROP:  self.opcode_ZEROP,
+              GT0P:   self.opcode_GT0P,
+              LT0P:   self.opcode_LT0P,
+
              }[op_code]
 
         op()
