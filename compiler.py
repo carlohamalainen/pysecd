@@ -146,7 +146,7 @@ def compile_and2(test1, test2, then_code, else_code, n, c):
 
     >>> code = compile([AND2, 0, 1, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
     >>> print code
-    ['LDC', 0, 'LDC', 1, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    ['LDC', 0, 'SEL', ['LDC', 1, 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
     >>> s = SECD()
     >>> s.load_program(code)
     >>> while s.running: s.execute_opcode()
@@ -157,7 +157,7 @@ def compile_and2(test1, test2, then_code, else_code, n, c):
 
     >>> code = compile([AND2, 1, 1, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
     >>> print code
-    ['LDC', 1, 'LDC', 1, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    ['LDC', 1, 'SEL', ['LDC', 1, 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
     >>> s = SECD()
     >>> s.load_program(code)
     >>> while s.running: s.execute_opcode()
@@ -168,7 +168,7 @@ def compile_and2(test1, test2, then_code, else_code, n, c):
 
     >>> code = compile([AND2, 1, 0, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
     >>> print code
-    ['LDC', 1, 'LDC', 0, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    ['LDC', 1, 'SEL', ['LDC', 0, 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
     >>> s = SECD()
     >>> s.load_program(code)
     >>> while s.running: s.execute_opcode()
@@ -179,11 +179,22 @@ def compile_and2(test1, test2, then_code, else_code, n, c):
 
     >>> code = compile([AND2, 0, 0, [WRITEI, 111], [WRITEI, 222]], [], [STOP])
     >>> print code
-    ['LDC', 0, 'LDC', 0, 'MUL', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    ['LDC', 0, 'SEL', ['LDC', 0, 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
     >>> s = SECD()
     >>> s.load_program(code)
     >>> while s.running: s.execute_opcode()
     222
+    <BLANKLINE>
+    MACHINE HALTED!
+    <BLANKLINE>
+
+    >>> code = compile([AND2, [ZEROP, 0], [ZEROP, 0], [WRITEI, 111], [WRITEI, 222]], [], [STOP])
+    >>> print code
+    ['LDC', 0, 'ZEROP', 'SEL', ['LDC', 0, 'ZEROP', 'SEL', ['LDC', 111, 'WRITEI', 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'JOIN'], ['LDC', 222, 'WRITEI', 'JOIN'], 'STOP']
+    >>> s = SECD()
+    >>> s.load_program(code)
+    >>> while s.running: s.execute_opcode()
+    111
     <BLANKLINE>
     MACHINE HALTED!
     <BLANKLINE>
@@ -193,10 +204,7 @@ def compile_and2(test1, test2, then_code, else_code, n, c):
     logger.debug('compile_and2: test1: %s; test2: %s; then_code: %s; else_code: %s, n: %s, c: %s',
                  str(test1), str(test2), str(then_code), str(else_code), str(n), str(c))
 
-    return compile(test1, n, []) + compile(test2, n, []) +[MUL] + \
-           [SEL] + [compile(then_code, n, [JOIN])] \
-                 + [compile(else_code, n, [JOIN])] \
-                 + c
+    return compile([IF, test1, [IF, test2, then_code, else_code], else_code], n, c)
 
 def index(e, n):
     """
@@ -402,8 +410,8 @@ def compile(e, n, c):
                     logger.debug('compile LETREC: body:   ' + str(body))
 
                     return [DUM, NIL] + compile_app(values, newn, compile_lambda(body, newn, [RAP] + c))
-            else: # fcn must be a variable FIXME is this comment correct?
-                logger.debug('compile: fcn = <%s> is a variable?' % (fcn,))
+            else:
+                logger.debug('compile: fcn = <%s>; args = <%s>' % (fcn, args,))
                 return [NIL] + compile_app(args, n, [LD] + [index(fcn, n)] + [AP] + c)
 
         else: # an application with nested function
@@ -425,5 +433,3 @@ if __name__ == '__main__':
     #s = SECD()
     #s.load_program(code)
     #while s.running: s.execute_opcode()
-
-
