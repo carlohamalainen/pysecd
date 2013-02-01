@@ -38,6 +38,5 @@ TODO
 ======
 
 * Test pysecd against one of the other implementations listed above.
-* Complete the Lisp to SECD compiler (Chapter 7 of Kogge's book); use the compiler to further test the SECD interpreter.
 * Implement garbage collection (Chapter 8 of Kogge's book).
 
