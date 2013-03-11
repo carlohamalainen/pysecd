@@ -8,8 +8,12 @@ presentation by Peter M. Kogge, The Architecture of Symbolic Computers,
 Author: Carlo Hamalainen <carlo.hamalainen@gmail.com>
 """
 
-import pydot
-from pydotutils import pydot_record_string
+try:
+    import pydot
+    from pydotutils import pydot_record_string
+except:
+    pass
+
 import sys
 
 # We have a fixed amount of memory available.

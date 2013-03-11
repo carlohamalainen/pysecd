@@ -21,6 +21,12 @@ LETREC  = 'LETREC'
 LIST    = 'LIST'
 AND2    = 'AND2'
 
+# Special keywords for IO actions:
+GET      = 'GET'
+PUT      = 'PUT'
+RETURN   = 'RETURN'
+IOACTION = 'IOACTION'
+
 def flatten1L(x):
     """
     Utility function for flattening a list of lists.
@@ -385,6 +391,9 @@ def compile(e, n, c):
                 # a simple list of ints, variable names, etc.
                 list_body = flatten1L([compile(list_item, n, [CONS]) for list_item in args][::-1])
                 return [NIL] + list_body + c
+            elif fcn == IOACTION:
+                print 'IOACTION:', 'e:', e
+                return e + c
             elif fcn == LAMBDA:
                 logger.debug('compile LAMBDA: fcn is a LAMBDA, args[1] = <%s>; args[0] = <%s>' % (args[1], args[0],))
                 assert len(args) == 2 # i.e. args == [name list, body]
@@ -433,3 +442,17 @@ if __name__ == '__main__':
     #s = SECD()
     #s.load_program(code)
     #while s.running: s.execute_opcode()
+
+
+    # put = lambda x: [Put, x, [Return, None]]
+    # blah = [IOACTION, LAMBDA, ['x'], [PUT, 'x', [RETURN, NIL]]]
+    blah = [IOACTION, [RETURN, NIL]]
+    blah = [IOACTION, [PUT, 'x', [RETURN, NIL]]]
+    code = compile(blah, [], [STOP])
+    print code
+
+    # get = [Get, lambda x: [Return, x]]
+
+
+
+
