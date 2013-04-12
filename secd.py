@@ -48,6 +48,7 @@ NIL     = 'NIL'
 NULL    = 'NULL'
 RAP     = 'RAP'
 READC   = 'READC'
+READI   = 'READI'
 RTN     = 'RTN'
 SEL     = 'SEL'
 STOP    = 'STOP'
@@ -85,6 +86,7 @@ OP_CODES = [ADD,      # integer addition
             WRITEC,   # write a character to the terminal, e.g. 96 -> 'a'
 
             READC,    # read a single character from the terminal
+            READI,    # read an integer from the terminal
 
             STOP,     # halt the machine
 
@@ -105,6 +107,7 @@ class SECD:
 
         # By default WRITEI and WRITEC write to stdout.
         self.output_stream = sys.stdout
+        self.input_stream  = sys.stdin
 
         self.debug = False
 
@@ -1271,6 +1274,30 @@ class SECD:
 
         self.registers['C'] = self.cdr(self.registers['C'])
 
+    def opcode_READI(self):
+        """
+        Read an integer from the console.
+
+        This doctest relies on stdin being '42'. Note the trailing
+        whitespace after the '?' as well (it is part of the prompt).
+
+        >>> s = SECD()
+        >>> s.load_program([READI, WRITEI], [97])
+        >>> s.execute_opcode()
+        ? 
+        >>> s.execute_opcode()
+        42
+        """
+
+        i = int(raw_input('? '))
+
+        new_cell = self.get_new_address()
+        self.set_int(new_cell, i)
+        self.push_stack('S', new_cell)
+
+        self.registers['C'] = self.cdr(self.registers['C'])
+
+
     def opcode_STOP(self):
         """
         Half the machine. Any future call to execute_opcode() results
@@ -1917,6 +1944,7 @@ class SECD:
               WRITEC: self.opcode_WRITEC,
 
               READC:  None, # not implemented
+              READI:  self.opcode_READI,
 
               STOP:   self.opcode_STOP,
 
